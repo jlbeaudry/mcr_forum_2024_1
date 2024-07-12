@@ -1,0 +1,454 @@
+---
+title: "DVCR Forum with MCRs (April 2024)"
+subtitle: "Summary of Responses to RDS Survey: Complete Report"
+#author: "Jen Beaudry"
+#date: "11/07/2024"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+header-includes:
+  - \usepackage{caption}
+  - \usepackage{titling}
+    \setlength{\droptitle}{-2cm} # removes some of the white space above title
+  - \pretitle{\begin{center}
+    \includegraphics[width=1.5in, height=1.5in]{flinders-university-horizontal-master.png}\LARGE\\} # adds logo
+  - \posttitle{\end{center}}
+  - \usepackage{fancyhdr}
+  - \fancypagestyle{plain}{\pagestyle{fancy}} # sets the footer on page 1
+  - \pagestyle{fancy} # sets the footer on page 2 and beyond
+  - \fancyhf{} # clears existing header & footer
+  - \renewcommand{\headrulewidth}{0pt} # removes the line from the header
+  - \fancyfoot[L]{Jen Beaudry} # my name in footer
+  - \fancyfoot[R]{\thepage} # page number in foooter
+---
+
+```{r setup, include=FALSE}
+
+### NOTE: USE THIS FOR THE FULL REPORT ###
+
+knitr::opts_chunk$set(echo = FALSE,
+                      include = TRUE, 
+                      eval = TRUE)
+
+# REMEMBER: Until you figure out parameterized reports, you'll have to manually 
+  # select which chunks to run and will need to delete the 'empty pages' that 
+  # aren't included in Rob's report
+
+```
+
+```{r library, include=FALSE}
+
+library(here)
+library(tidyverse)
+library(kableExtra)
+library(RColorBrewer)
+
+```
+
+```{r functions, include=FALSE}
+
+styler_pdf <- function(dat) {
+  dat %>%
+     kable_styling(full_width = F, 
+                latex_options = c("striped", "HOLD_position"))
+}
+
+source(here("..", "functions", "ratings_summary.R"))
+
+```
+
+```{r load data, include=FALSE}
+
+df <- read_csv(here::here("data", "mcr_forum_processed.csv"), lazy = FALSE)
+
+```
+
+We asked our attendees five questions. One was about the forum, two were about
+their training and development needs, one was about how they want us to communicate
+opportunities to them, and one was an open-ended question giving 
+them a chance to tell us anything else they wanted us to know. 
+
+Of the 19 mid-career researchers who attended this session, `r nrow(df)` 
+completed the survey. 
+
+\captionsetup[table]{labelformat=empty}
+
+## Ideas for the DVC(R) forum with ECRs
+What would you like to see in future fora with the DVC(R)?
+
+```{r table for forum ideas}
+
+# use for complete report not report for Rob
+
+# put relevant data in a tibble
+forum_ideas <- df %>% 
+  dplyr::select(c(id, future_fora)) %>% 
+  filter(!future_fora == "NA") %>%  # remove the NA values
+  mutate(responses = 1:n()) %>% 
+  relocate(responses, .after = id)
+
+# get the relevant ns for the header
+total_n <- length(unique(df$id))
+resp_n <- length(unique(forum_ideas$id))
+ns <- c(total_n, resp_n) 
+
+forum_ideas <- forum_ideas %>% 
+  dplyr::select(c(id, future_fora))
+
+knitr::kable (
+  forum_ideas,
+  booktabs = T,
+  linesep = "\\addlinespace",
+  col.names = c("ID", "MCR Forum Ideas"),
+  caption =
+    sprintf("From the %s people responded to this question", paste(ns, collapse = " completed surveys, ")),
+  align = 'cl', 
+  longtable = T #break the table over multiple pages
+  ) %>%
+  column_spec(2, width = "5in") %>% 
+  kable_styling(full_width = F, 
+                latex_options = c("repeat_header", "hold_position")) 
+# use different styling to repeat the header
+
+
+```
+
+
+\newpage
+## Interest in potential training and development topics
+We are considering expanding our training and development offerings in the future.
+From the `r nrow(df)` respondents, their interest in attending the various topics 
+is illustrated below.
+
+\vskip 0.3in
+
+```{r creating tibbles for all training responses, include=FALSE}
+
+# breadcrumb: I think I now have a function for this, so I can probably simplify this code. 
+
+# get total n to calculate percentages
+
+total_n <- length(unique(df$id))
+
+# create tibbles for each training option so I can create stacked bar charts
+
+os <- df %>% 
+  mutate(response = open_science, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Open science", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+
+ldr <- df %>% 
+  mutate(response = leadership, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Leadership skills", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+
+prod <- df %>% 
+  mutate(response = productivity, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Research productivity", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+e_i <- df %>% 
+  mutate(response = engagement_impact, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Engagement and impact", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+well <- df %>% 
+  mutate(response = wellbeing, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Well-being issues", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+pitch <- df %>% 
+  mutate(response = pitch_research, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Pitching research", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+grant <- df %>% 
+  mutate(response = grantsmanship, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Grantsmanship", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+plan <- df %>% 
+  mutate(response = career_planning, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Career planning", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+pm <- df %>% 
+  mutate(response = project_management, .keep = "unused") %>% 
+  dplyr::count(response) %>% 
+  mutate(training = "Project management", .before = response) %>% 
+  mutate(percentage = round (n/(total_n)*100))
+
+# join the tibbles
+
+train <- os %>% 
+  full_join(ldr) %>% 
+  full_join(prod) %>% 
+  full_join(e_i) %>% 
+  full_join(well) %>%
+  full_join(pitch) %>% 
+  full_join(grant) %>% 
+  full_join(plan) %>% 
+  full_join(pm)
+
+```
+
+```{r plot the training responses}
+
+# rename NAs
+train[is.na(train)] <- "No response"
+
+# use this to reorder the factor within the ggplot code rather than doing it 
+  # in its own code
+attend <- c("No response", "I would not attend", "I might attend", "I would attend")
+
+
+# create a label variable so that only certain responses have labels
+train <- train %>% 
+  mutate(my_label = case_when (response == "I would attend" ~ "yes",
+                               response == "I might attend" ~"yes",
+                               TRUE ~ "no"))
+
+
+# plot it [this works & shows certain numbers]
+  # I am not using brewer because I want NA to be at the bottom of the legend, so I need to manually control things
+ggplot(train, aes(fill = factor(response, levels = attend), y = percentage, x = training)) +
+  geom_bar(position="fill", stat="identity", colour = "black") +
+  # add text to show the percentage numbers on the figure for selected responses
+  geom_text(aes(y = percentage, x = training, label = ifelse(my_label=="yes", percentage, "")), position = position_fill(vjust = 0.5), size = 3) +
+  scale_fill_manual(values = c("#bfbfbf", "#d2e2f0", "#90b8da", "#377fbc"),
+                    labels = c("No response", "I would not attend", "I might attend", "I would attend"), 
+                    guide = guide_legend (reverse = TRUE)) +
+  labs (x = element_blank(),
+        y = "Percentage") +
+  theme_classic() +
+theme(legend.title = element_blank()) +
+    coord_flip() +
+  scale_y_continuous(labels = c("0", "25", "50", "75", "100"))
+
+```
+
+\newpage
+\captionsetup[table]{labelformat=empty}
+
+## Ideas for other training and development opportunities
+What other researcher training and development opportunities would you like to see
+at Flinders?
+
+```{r table for other training}
+
+# put relevant data in a tibble
+other_training <- df %>% 
+  dplyr::select(c(id, other_opportunities)) %>% 
+  filter(!other_opportunities == "NA") %>%  # remove the NA values
+  mutate(responses = 1:n()) %>% 
+  relocate(responses, .after = id)
+
+# get the relevant ns for the header
+total_n <- length(unique(df$id))
+resp_n <- length(unique(other_training$id))
+ns <- c(total_n, resp_n) 
+
+other_training <- other_training %>% 
+  dplyr::select(c(id, other_opportunities))
+
+knitr::kable (
+  other_training,
+  booktabs = T,
+  linesep = "\\addlinespace",
+  col.names = c("ID", "Other Training Ideas"),
+  caption =
+    sprintf("From the %s people responded to this question", paste(ns, collapse = " completed surveys, ")),
+  align = 'cl', 
+  longtable = T #break the table over multiple pages
+  ) %>%
+  column_spec(2, width = "5in") %>% 
+  kable_styling(full_width = F, 
+                latex_options = c("repeat_header", "hold_position")) 
+# use different styling to repeat the header
+
+
+```
+
+
+\newpage
+\captionsetup[table]{labelformat=empty}
+
+## Communication preferences
+How do you prefer to find out about researcher training and development opportunities
+(e.g., targeted emails, College newsletters, Research Link weekly newsletter, all of the above)? 
+
+
+```{r recode comms}
+
+# put relevant data in a tibble (will need this for the table, so do not combine
+  # with tibble below)
+
+comms <- df %>% 
+  dplyr::select(c(id, comms_preference)) %>% 
+  filter(! comms_preference == "NA") %>%  # remove the NA values
+  mutate(responses = 1:n()) %>% 
+  relocate(responses, .after = id) %>% 
+    mutate(length = str_length(comms_preference)) %>% # I could delete these when I'm done playing
+  mutate(text_report = case_when (length > 20 ~ "yes", 
+                                  TRUE ~ "no"))
+
+# put relevant data in a tibble
+comms_recode <- comms %>% 
+  mutate(college_newsletter1 = str_detect(comms_preference, regex("College", ignore_case = T))) %>% # one wonky case that needs to be recoded
+  mutate(emails = str_detect(comms_preference, regex("email", ignore_case = T))) %>% 
+  mutate(researchlink = str_detect(comms_preference, regex("Link", ignore_case = T))) %>% 
+  mutate(all = str_detect (comms_preference, regex("all", ignore_case = T))) %>% 
+  mutate(college_newsletter = case_when (id == "10" ~ FALSE, 
+                                         TRUE ~ (college_newsletter1)))
+
+total_n <- length(comms_recode$id)
+
+# SELECT THE RATING COLUMNS & SAVE AS A TIBBLE I WANT TO SUMMARISE & PLOT USING THE RATING_SUMMARY FUNCTION
+
+comms_options <- comms_recode %>% 
+  select (c("college_newsletter", 
+            "emails", 
+            "researchlink", 
+            "all")) 
+  
+columns <- c("college_newsletter", 
+            "emails", 
+            "researchlink", 
+            "all")
+
+comms_summary <- purrr::map_dfr(columns, .f = function(column) {
+	ratings_summary(comms_options, column)
+})
+
+# rename the comms options as well as the true and false
+
+comms_summary <- comms_summary %>% 
+  mutate(comm_options = case_when(rating_item == "college_newsletter" ~ "College newsletters",
+                               rating_item == "emails" ~ "Targeted emails",
+                               rating_item == "researchlink" ~ "Research Link",
+                               TRUE ~ "All of the above")) %>% 
+  mutate(response = case_when(rating == "TRUE" ~ "Mentioned", 
+                              TRUE ~ "Not mentioned"))
+
+```
+
+
+Of the `r total_n` respondents, many of them repeated the options available to them
+in the question text. As such, we recoded their responses and we report them in 
+the figure below. Several respondents mentioned more than one of the communication
+channels. 
+
+```{r plot the comms_summary responses}
+
+# use this to reorder the factor within the ggplot code rather than doing it 
+  # in its own code
+
+mention <- c("Not mentioned", "Mentioned")
+
+
+# plot it [this works & shows all numbers]
+ggplot(comms_summary, aes(fill = factor(response, levels = mention), y = percentage, x = comm_options)) +
+  geom_bar(position="fill", stat="identity", colour = "black") +
+  # add text to show the percentage numbers on the figure for selected responses
+  geom_text(aes(y = percentage, x = comm_options, label = percentage), position = position_fill(vjust = 0.5), size = 3) +
+  scale_fill_manual(values = c("#d2e2f0", "#2171b5"),
+                    labels = c("Not mentioned", "Mentioned"), 
+                    guide = guide_legend (reverse = TRUE)) +
+  labs (x = element_blank(),
+        y = "Percentage") +
+  theme_classic() +
+theme(legend.title = element_blank()) +
+    coord_flip() +
+  scale_y_continuous(labels = c("0", "25", "50", "75", "100"))
+
+
+```
+
+```{r table for comms}
+
+# use the comms tibble
+
+comms2 <- comms %>% 
+  mutate(length = str_length(comms_preference)) %>% 
+  mutate(text_report = case_when (length > 20 ~ "yes", 
+                                  TRUE ~ "no")) %>% 
+  mutate(text_report2 = case_when (id == "4" ~ "no",
+                                  id == "5" ~ "no",
+                                  TRUE ~ text_report))
+
+comms <- comms2 %>% 
+  filter (text_report2 == "yes") %>% 
+  dplyr::select(c(id, comms_preference))
+
+
+knitr::kable (
+  comms,
+  booktabs = T,
+  linesep = "\\addlinespace",
+  col.names = c("ID", "Communications preferences"),
+  caption =
+   sprintf("The responses below provided details beyond those captured in the previous figure"),
+  align = 'cl', 
+  longtable = T #break the table over multiple pages
+  ) %>%
+  column_spec(2, width = "5in") %>% 
+  kable_styling(full_width = F, 
+                latex_options = c("repeat_header", "hold_position")) 
+# use different styling to repeat the header
+
+
+```
+
+
+\newpage
+\captionsetup[table]{labelformat=empty}
+
+## Final comments
+Is there anything else you would like us to know?
+
+```{r table for anything else}
+
+# put relevant data in a tibble
+anything <- df %>% 
+  dplyr::select(c(id, anything_else)) %>% 
+  filter(!anything_else == "NA") %>%  # remove the NA values
+  mutate(responses = 1:n()) %>% 
+  relocate(responses, .after = id)
+
+# get the relevant ns for the header
+total_n <- length(unique(df$id))
+resp_n <- length(unique(anything$id))
+ns <- c(total_n, resp_n) 
+
+anything <- anything %>% 
+  dplyr::select(c(id, anything_else))
+
+knitr::kable (
+  anything,
+  booktabs = T,
+  linesep = "\\addlinespace",
+  col.names = c("ID", "Other Ideas"),
+  caption =
+   sprintf("From the %s people responded to this question", paste(ns, collapse = " completed surveys, ")),
+  align = 'cl', 
+  longtable = T #break the table over multiple pages
+  ) %>%
+  column_spec(2, width = "5in") %>% 
+  kable_styling(full_width = F, 
+                latex_options = c("repeat_header", "hold_position")) 
+# use different styling to repeat the header
+
+
+```
+
+

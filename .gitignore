@@ -51,3 +51,4 @@ internal_notes.md
 *.aux 
 *.out 
 
+ "*.Rproj"
