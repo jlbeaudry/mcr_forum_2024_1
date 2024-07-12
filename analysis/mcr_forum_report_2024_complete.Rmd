@@ -18,7 +18,7 @@ header-includes:
   - \pagestyle{fancy} # sets the footer on page 2 and beyond
   - \fancyhf{} # clears existing header & footer
   - \renewcommand{\headrulewidth}{0pt} # removes the line from the header
-  - \fancyfoot[L]{Jen Beaudry} # my name in footer
+#  - \fancyfoot[L]{Jen Beaudry} # my name in footer
   - \fancyfoot[R]{\thepage} # page number in foooter
 ---
 
@@ -72,7 +72,7 @@ open-ended question givingthem a chance to tell us anything else they wanted us 
 
 Of the `r attendees` mid-career researchers who attended this session, `r nrow(df)` 
 completed the survey. The responses might not be reflective of the attitudes of 
-all attendees because of the low response rate (`r round((nrow(df)/(nrow(df)+attendees)*100),2)`%).   
+all attendees because of the low response rate (`r round((nrow(df)/attendees*100),2)`%).   
 
 \captionsetup[table]{labelformat=empty}
 
